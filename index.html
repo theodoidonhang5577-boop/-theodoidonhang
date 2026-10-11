@@ -1,0 +1,321 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theo Dõi Đơn Hàng</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif;}
+        :root{--xanh:#165DFF;--xanh-nhat:#E8F3FF;--xanh-den:#0E42CC;--xam:#f5f7fa;--chu:#333;}
+        body{background:var(--xam);color:var(--chu);line-height:1.6;}
+        .container{max-width:1200px;margin:0 auto;padding:20px;}
+        header{background:linear-gradient(135deg,var(--xanh),var(--xanh-den));color:white;padding:30px 0;text-align:center;}
+        nav{background:white;box-shadow:0 2px 8px rgba(0,0,0,0.1);position:sticky;top:0;z-index:99;}
+        nav .container{display:flex;gap:10px;padding:12px 20px;overflow-x:auto;}
+        nav button{padding:10px 20px;border:none;background:transparent;color:var(--chu);font-size:15px;border-radius:6px;cursor:pointer;white-space:nowrap;}
+        nav button.active{background:var(--xanh);color:white;}
+        section{display:none;padding-top:25px;}
+        section.active{display:block;animation:fade 0.3s;}
+        @keyframes fade{from{opacity:0;}to{opacity:1;}}
+        .card{background:white;border-radius:12px;padding:25px;margin-bottom:20px;box-shadow:0 2px 10px rgba(22,93,255,0.08);}
+        h2{color:var(--xanh);margin-bottom:20px;font-size:20px;}
+        input,button,select{padding:12px 15px;border:1px solid #ddd;border-radius:6px;font-size:15px;}
+        input:focus,select:focus{outline:none;border-color:var(--xanh);}
+        .btn{background:var(--xanh);color:white;border:none;cursor:pointer;transition:0.2s;}
+        .btn:hover{background:var(--xanh-den);}
+        .btn-xanh-nhat{background:var(--xanh-nhat);color:var(--xanh);border:none;}
+        .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:15px;}
+        .row input,.row select{flex:1;min-width:180px;}
+        .status{display:inline-block;padding:4px 10px;border-radius:20px;font-size:13px;font-weight:500;}
+        .status.cho-xac-nhan{background:#f3f4f6;color:#6b7280;}
+        .status.dang-xu-ly{background:#DBEAFE;color:#1E40AF;}
+        .status.dang-giao-hang{background:#FEF3C7;color:#92400E;}
+        .status.da-giao{background:#D1FAE5;color:#065F46;}
+        .status.da-huy{background:#FEE2E2;color:#991B1B;}
+        table{width:100%;border-collapse:collapse;margin-top:15px;}
+        th,td{padding:12px;text-align:left;border-bottom:1px solid #eee;font-size:14px;}
+        th{background:var(--xanh-nhat);color:var(--xanh);font-weight:600;}
+        .thong-tin-don{background:var(--xanh-nhat);border-radius:8px;padding:20px;margin-top:15px;}
+        .an{display:none;}
+        .error{color:#DC2626;margin-top:8px;}
+        .tien-tong{font-size:18px;font-weight:bold;color:#DC2626;}
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📦 Hệ Thống Theo Dõi Đơn Hàng</h1>
+        <p style="opacity:0.9;">Tra cứu & quản lý đơn hàng dễ dàng</p>
+    </header>
+
+    <nav>
+        <div class="container">
+            <button class="tab-btn active" data-tab="tra-cuu">🔍 Tra Cứu Đơn Hàng</button>
+            <button class="tab-btn" data-tab="quan-ly">📋 Quản Lý Đơn Hàng</button>
+            <button class="tab-btn" data-tab="du-lieu">💾 Dữ Liệu Đơn Hàng</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- ========= PHẦN 1: TRA CỨU ĐƠN HÀNG ========= -->
+        <section id="tra-cuu" class="active">
+            <div class="card">
+                <h2>🔍 Tra cứu thông tin đơn hàng</h2>
+                <div class="row">
+                    <input type="text" id="maDonTra" placeholder="Nhập mã đơn hàng (VD: DH12345)">
+                    <button class="btn" onclick="traDonHang()">Tra cứu</button>
+                </div>
+                
+                <div id="ketQuaTra" class="an">
+                    <div class="thong-tin-don">
+                        <h3>Thông tin đơn hàng</h3>
+                        <p><strong>Mã đơn:</strong> <span id="t-ma"></span></p>
+                        <p><strong>Tên khách:</strong> <span id="t-khach"></span></p>
+                        <p><strong>Sản phẩm:</strong> <span id="t-sanpham"></span></p>
+                        <p class="tien-tong"><strong>Tổng tiền:</strong> <span id="t-tien"></span></p>
+                        <p><strong>Trạng thái:</strong> <span id="t-trangthai"></span></p>
+                        <p><strong>Thanh toán:</strong> <span id="t-thanhtoan"></span></p>
+                        <p><strong>Địa chỉ:</strong> <span id="t-diachi"></span></p>
+                        <p><strong>Cập nhật lúc:</strong> <span id="t-ngay"></span></p>
+                    </div>
+                </div>
+                <p id="loiTra" class="error an">❌ Không tìm thấy mã đơn hàng!</p>
+            </div>
+        </section>
+
+        <!-- ========= PHẦN 2: QUẢN LÝ ĐƠN HÀNG ========= -->
+        <section id="quan-ly">
+            <div class="card">
+                <h2>➕ Thêm / Cập nhật đơn hàng</h2>
+                <div class="row">
+                    <input type="text" id="maDon" placeholder="Mã đơn hàng (VD: DH123)">
+                    <input type="text" id="tenKhach" placeholder="Họ tên khách hàng">
+                </div>
+                <div class="row">
+                    <input type="text" id="sanPham" placeholder="Tên sản phẩm">
+                    <input type="number" id="soLuong" placeholder="Số lượng" value="1" style="max-width:100px;">
+                    <input type="number" id="giaTien" placeholder="Đơn giá (VNĐ)">
+                </div>
+                <div class="row">
+                    <input type="text" id="sdt" placeholder="Số điện thoại">
+                    <input type="text" id="diaChi" placeholder="Địa chỉ nhận hàng">
+                </div>
+                <div class="row">
+                    <select id="trangThai">
+                        <option value="cho-xac-nhan">Chờ xác nhận</option>
+                        <option value="dang-xu-ly">Đang xử lý</option>
+                        <option value="dang-giao-hang">Đang giao hàng</option>
+                        <option value="da-giao">Đã giao hàng</option>
+                        <option value="da-huy">Đã hủy</option>
+                    </select>
+                    <select id="thanhToan">
+                        <option value="chua-thanh-toan">Chưa thanh toán</option>
+                        <option value="da-thanh-toan">Đã thanh toán</option>
+                        <option value="tra-khi-nhan">Trả khi nhận hàng</option>
+                    </select>
+                    <button class="btn" onclick="luuDonHang()">💾 Lưu Đơn Hàng</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📋 Danh sách đơn hàng</h2>
+                <div id="danhSachDon">
+                    <p style="color:#888;">Chưa có đơn hàng nào.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========= PHẦN 3: DỮ LIỆU ĐƠN HÀNG ========= -->
+        <section id="du-lieu">
+            <div class="card">
+                <h2>💾 Dữ liệu hệ thống</h2>
+                <p style="margin-bottom:15px;">Dữ liệu được lưu trên trình duyệt của bạn. Sao lưu lại để không mất nhé!</p>
+                <textarea id="duLieuText" style="width:100%;height:200px;padding:12px;border:1px solid #ddd;border-radius:6px;resize:none;" readonly></textarea>
+                <div class="row" style="margin-top:15px;">
+                    <button class="btn-xanh-nhat" onclick="saoLuuDuLieu()">📋 Sao chép dữ liệu</button>
+                    <button class="btn-xanh-nhat" onclick="khoiPhucDuLieu()">🔄 Khôi phục dữ liệu</button>
+                    <button class="btn" style="background:#DC2626;" onclick="xoaHetDuLieu()">🗑️ Xóa hết dữ liệu</button>
+                </div>
+                <p id="thongBao" style="margin-top:12px;color:var(--xanh);"></p>
+            </div>
+        </section>
+    </div>
+
+<script>
+// Chuyển tab
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+        if(btn.dataset.tab==='du-lieu') hienDuLieu();
+    });
+});
+
+// Lấy dữ liệu từ bộ nhớ
+function layDuLieu(){
+    return JSON.parse(localStorage.getItem('donHangData') || '[]');
+}
+
+// Lưu dữ liệu
+function luuDuLieu(danhSach){
+    localStorage.setItem('donHangData', JSON.stringify(danhSach));
+}
+
+// Định dạng tiền
+function dinhDienTien(tien){
+    return new Intl.NumberFormat('vi-VN').format(tien) + ' VNĐ';
+}
+
+// Tra cứu đơn hàng
+function traDonHang(){
+    const ma = document.getElementById('maDonTra').value.trim().toUpperCase();
+    const ds = layDuLieu();
+    const don = ds.find(d=>d.maDonHang===ma);
+    
+    if(don){
+        document.getElementById('ketQuaTra').classList.remove('an');
+        document.getElementById('loiTra').classList.add('an');
+        document.getElementById('t-ma').textContent = don.maDonHang;
+        document.getElementById('t-khach').textContent = don.tenKhach;
+        document.getElementById('t-sanpham').textContent = don.sanPham + ' x' + don.soLuong;
+        document.getElementById('t-tien').textContent = dinhDienTien(don.tongTien);
+        document.getElementById('t-trangthai').innerHTML = `<span class="status ${don.trangThai}">${don.trangThai.replace('-',' ')}</span>`;
+        document.getElementById('t-thanhtoan').textContent = don.thanhToan;
+        document.getElementById('t-diachi').textContent = don.diaChi + ' — SĐT: ' + don.sdt;
+        document.getElementById('t-ngay').textContent = don.ngayTao;
+    }else{
+        document.getElementById('ketQuaTra').classList.add('an');
+        document.getElementById('loiTra').classList.remove('an');
+    }
+}
+
+// Lưu đơn hàng
+function luuDonHang(){
+    const ma = document.getElementById('maDon').value.trim().toUpperCase();
+    if(!ma){ alert('Nhập mã đơn hàng!'); return; }
+    
+    const ds = layDuLieu();
+    const soLuong = parseInt(document.getElementById('soLuong').value || 1);
+    const donGia = parseInt(document.getElementById('giaTien').value || 0);
+    const tongTien = soLuong * donGia;
+    
+    const donMoi = {
+        maDonHang: ma,
+        tenKhach: document.getElementById('tenKhach').value.trim(),
+        sanPham: document.getElementById('sanPham').value.trim(),
+        soLuong: soLuong,
+        donGia: donGia,
+        tongTien: tongTien,
+        sdt: document.getElementById('sdt').value.trim(),
+        diaChi: document.getElementById('diaChi').value.trim(),
+        trangThai: document.getElementById('trangThai').value,
+        thanhToan: document.getElementById('thanhToan').value,
+        ngayTao: new Date().toLocaleString('vi-VN')
+    };
+    
+    const viTri = ds.findIndex(d=>d.maDonHang===ma);
+    if(viTri>=0){
+        if(confirm('Mã đơn đã tồn tại! Cập nhật thông tin cũ?')) ds[viTri] = donMoi;
+        else return;
+    }else{
+        ds.unshift(donMoi);
+    }
+    
+    luuDuLieu(ds);
+    hienDanhSach();
+    // Xóa form
+    document.getElementById('maDon').value='';
+    document.getElementById('tenKhach').value='';
+    document.getElementById('sanPham').value='';
+    document.getElementById('soLuong').value='1';
+    document.getElementById('giaTien').value='';
+    document.getElementById('sdt').value='';
+    document.getElementById('diaChi').value='';
+    thongBao('✅ Đơn hàng đã được lưu!');
+}
+
+// Hiển thị danh sách
+function hienDanhSach(){
+    const ds = layDuLieu();
+    const khuon = document.getElementById('danhSachDon');
+    
+    if(ds.length===0){
+        khuon.innerHTML = '<p style="color:#888;">Chưa có đơn hàng nào.</p>';
+        return;
+    }
+    
+    khuon.innerHTML = `<table><thead><tr><th>Mã ĐH</th><th>Khách hàng</th><th>Sản phẩm</th><th>Tổng tiền</th><th>Trạng thái</th><th>Thanh toán</th><th></th></tr></thead><tbody>` +
+        ds.map(d=>`
+        <tr>
+            <td><strong>${d.maDonHang}</strong></td>
+            <td>${d.tenKhach}<br><small>${d.sdt}</small></td>
+            <td>${d.sanPham} x${d.soLuong}</td>
+            <td class="tien-tong">${dinhDienTien(d.tongTien)}</td>
+            <td><span class="status ${d.trangThai}">${d.trangThai.replace('-',' ')}</span></td>
+            <td>${d.thanhToan}</td>
+            <td><button style="padding:4px 8px;font-size:12px;" onclick="xoaDon('${d.maDonHang}')">Xóa</button></td>
+        </tr>`).join('') +
+        `</tbody></table>`;
+}
+
+// Xóa đơn hàng
+window.xoaDon = function(ma){
+    if(confirm(`Xóa đơn hàng ${ma}?`)){
+        const ds = layDuLieu().filter(d=>d.maDonHang!==ma);
+        luuDuLieu(ds);
+        hienDanhSach();
+        thongBao('🗑️ Đã xóa đơn hàng!');
+    }
+};
+
+// Hiển thị dữ liệu thô
+function hienDuLieu(){
+    document.getElementById('duLieuText').value = JSON.stringify(layDuLieu(), null, 2);
+}
+
+// Sao chép dữ liệu
+function saoLuuDuLieu(){
+    document.getElementById('duLieuText').select();
+    document.execCommand('copy');
+    thongBao('📋 Đã sao chép dữ liệu! Lưu lại vào đâu đó an toàn nhé.');
+}
+
+// Khôi phục dữ liệu
+function khoiPhucDuLieu(){
+    const data = prompt('Dán nội dung dữ liệu vào đây:');
+    if(!data) return;
+    try{
+        const json = JSON.parse(data);
+        if(!Array.isArray(json)) throw Error();
+        luuDuLieu(json);
+        hienDanhSach();
+        hienDuLieu();
+        thongBao('✅ Khôi phục dữ liệu thành công!');
+    }catch(e){
+        alert('❌ Dữ liệu không hợp lệ!');
+    }
+}
+
+// Xóa hết
+function xoaHetDuLieu(){
+    if(confirm('⚠️ CHẮC CHẮN xóa TẤT CẢ đơn hàng? Không thể hoàn tác!')){
+        localStorage.removeItem('donHangData');
+        hienDanhSach();
+        hienDuLieu();
+        thongBao('🗑️ Đã xóa hết dữ liệu!');
+    }
+}
+
+function thongBao(text){
+    const tb = document.getElementById('thongBao');
+    tb.textContent = text;
+    setTimeout(()=>tb.textContent='', 4000);
+}
+
+// Khởi tạo
+hienDanhSach();
+</script>
+</body>
+</html>
